@@ -1,16 +1,212 @@
-# untitled
+# 专注 (Focus) - 专注学习工具
 
-A new Flutter project.
+> 越努力越幸运
 
-## Getting Started
+一个基于 Flutter 开发的 Android 专注学习应用，帮助你通过科学的休息机制和奖励系统，提高学习效率和专注力。
 
-This project is a starting point for a Flutter application.
+## ✨ 核心功能
 
-A few resources to get you started if this is your first Flutter project:
+### 📚 多项目学习管理
+- 创建多个学习项目，分别追踪学习进度
+- 每个项目独立统计学习时长和获得的"运"
+- 项目卡片式展示，一目了然
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### ⏱️ 双模式学习计时
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+**自由模式**
+- 从零开始计时，无预设时间限制
+- 学习时长实时计入项目累计
+- 达到 5 天（7200 分钟）自动结束
+
+**预设模式**
+- 设置 60-720 分钟的学习计划
+- 带进度条显示，清晰掌握学习进度
+- 完成任务额外奖励 +30 运
+- 未完成任务不计入学习时长
+
+### 🎯 科学的休息机制
+
+**小阶段休息（3-5 分钟）**
+- 随机间隔提醒，避免疲劳
+- 休息 10 秒，自动继续学习
+- 每次休息获得 +1 运
+
+**大阶段休息（90 分钟）**
+- 完成 90 分钟学习后触发
+- 休息 20 分钟，充分恢复精力
+- 每次休息获得 +30 运
+- 休息期间暂停有效学习时间
+
+### 🎁 奖励系统
+
+- **连续学习奖励**：每分钟自动获得 0.1 运（包括休息时间）
+- **休息奖励**：小休息 +1 运，大休息 +30 运
+- **任务完成奖励**：预设模式完成 +30 运
+- **每日签到**：手动签到获得 30 运/天，支持补签
+
+### 🎨 个性化设置
+
+- **主题颜色**：10 种主题色可选
+- **提示音设置**：5 种短休提示音 + 4 种长休提示音
+- **奖励额度自定义**：可调整短休/长休/每分钟的运奖励
+- **项目级/全局配置**：支持单独配置或全局应用
+
+### 📊 数据统计
+
+- **全局运**：所有项目累计的运（货币）
+- **项目运**：单个项目获得的运（统计）
+- **学习时长**：精确到分钟的学习时间统计
+- **日志记录**：记录所有重要事件（最多 500 条）
+
+### 🎲 今日运势
+
+- 每天可抽取一次运势（平/小吉/大吉）
+- 次日自动重置为"可抽取"状态
+
+## 🛠️ 技术栈
+
+- **框架**：Flutter 3.9.2+
+- **状态管理**：StatefulWidget（1.0 版本）
+- **本地存储**：SharedPreferences + JSON 文件
+- **音频播放**：audioplayers 6.5.1
+- **引导教程**：tutorial_coach_mark 1.2.11
+
+## 📦 安装和运行
+
+### 环境要求
+
+- Flutter SDK 3.9.2 或更高版本
+- Android Studio / VS Code
+- Android SDK（用于 Android 开发）
+
+### 克隆项目
+
+```bash
+git clone https://github.com/2S-D/zhuanzhu-app.git
+cd zhuanzhu-app
+```
+
+### 安装依赖
+
+```bash
+flutter pub get
+```
+
+### 运行项目
+
+```bash
+# Debug 模式
+flutter run
+
+# Release 模式（需要签名配置）
+flutter build apk --release
+```
+
+### 构建 APK
+
+```bash
+# Debug APK
+flutter build apk --debug
+
+# Release APK（启用持久化）
+flutter build apk --release --dart-define=ENABLE_PERSISTENCE=true
+```
+
+## 📱 使用说明
+
+### 首次使用
+
+1. 启动应用后会显示引导教程
+2. 点击"签到"图标进行每日签到
+3. 点击"创建项目"创建你的第一个学习项目
+4. 进入项目后选择"开始专注"或"预设时间"
+
+### 学习模式选择
+
+- **自由模式**：适合长时间学习，无时间压力
+- **预设模式**：适合有明确学习计划的场景
+
+### 休息机制
+
+- 小休息会自动弹出，10 秒后自动继续
+- 大休息会显示倒计时，20 分钟后自动继续
+- 休息期间可以点击对话框外部关闭，或等待自动关闭
+
+### 数据持久化
+
+- v1.0 版本支持完整数据持久化
+- 所有数据保存在本地，重启应用不丢失
+- 开发模式默认关闭持久化（便于快速迭代）
+
+## 📂 项目结构
+
+```
+lib/
+├── main.dart                 # 应用入口
+├── models/                   # 数据模型
+│   ├── project.dart         # 项目模型
+│   ├── log_entry.dart       # 日志模型
+│   └── fortune.dart         # 运势模型
+├── screens/                  # 页面
+│   ├── splash_screen.dart   # 启动页
+│   ├── main_screen.dart     # 主页面（项目列表）
+│   ├── home_screen.dart     # 学习页面
+│   ├── user_screen.dart     # 用户设置页
+│   └── log_screen.dart      # 日志查看页
+├── widgets/                  # 组件
+│   ├── countdown_dialog.dart # 倒计时对话框
+│   └── debug_menu.dart      # 调试菜单
+├── services/                 # 服务
+│   └── data_repository.dart # 数据持久化服务
+└── utils/                    # 工具类
+    ├── constants.dart        # 常量定义
+    └── time_formatter.dart   # 时间格式化
+```
+
+## 🎯 版本信息
+
+### v1.0.0 (当前版本)
+
+- ✅ 完整的双模式学习计时
+- ✅ 科学的休息机制
+- ✅ 奖励系统
+- ✅ 多项目管理
+- ✅ 数据持久化
+- ✅ 个性化设置
+- ✅ 今日运势
+
+### 开发中 (v2.0)
+
+- 🔄 内置语言模型
+- 🔄 更多精致功能
+- 🔄 性能优化
+
+## 📝 开发说明
+
+### 持久化开关
+
+开发模式默认关闭持久化，发布时显式开启：
+
+```bash
+# 开发模式（无持久化）
+flutter run
+
+# 发布模式（有持久化）
+flutter build apk --release --dart-define=ENABLE_PERSISTENCE=true
+```
+
+### 调试加速
+
+学习页面右上角有调试菜单，支持 5x/10x/60x/300x 加速，方便测试。
+
+## 📄 许可证
+
+本项目采用 Apache-2.0 许可证。详见 [LICENSE](LICENSE) 文件。
+
+## 🙏 致谢
+
+感谢所有为这个项目做出贡献的开发者。
+
+---
+
+**越努力越幸运** ✨
