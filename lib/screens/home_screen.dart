@@ -655,16 +655,16 @@ class _StudyScreenState extends State<StudyScreen> {
       if (!played) throw Exception('no asset');
     } catch (_) {
       // 回退为多次系统提示音
+    SystemSound.play(SystemSoundType.alert);
+    _soundTimer = Timer(const Duration(milliseconds: 500), () {
       SystemSound.play(SystemSoundType.alert);
-      _soundTimer = Timer(const Duration(milliseconds: 500), () {
-        SystemSound.play(SystemSoundType.alert);
-      });
-      Timer(const Duration(seconds: 1), () {
-        SystemSound.play(SystemSoundType.alert);
-      });
-      Timer(const Duration(milliseconds: 1500), () {
-        SystemSound.play(SystemSoundType.alert);
-      });
+    });
+    Timer(const Duration(seconds: 1), () {
+      SystemSound.play(SystemSoundType.alert);
+    });
+    Timer(const Duration(milliseconds: 1500), () {
+      SystemSound.play(SystemSoundType.alert);
+    });
     }
   }
   
@@ -1081,13 +1081,13 @@ class _StudyScreenState extends State<StudyScreen> {
             tooltip: '奖励设置',
           ),
           IconButton(
-            icon: const Icon(Icons.bug_report),
-            onPressed: () {
-              setState(() {
-                _showDebugMenu = !_showDebugMenu;
-              });
-            },
-            tooltip: '调试菜单',
+          icon: const Icon(Icons.bug_report),
+          onPressed: () {
+            setState(() {
+              _showDebugMenu = !_showDebugMenu;
+            });
+          },
+          tooltip: '调试菜单',
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -1212,26 +1212,26 @@ class _StudyScreenState extends State<StudyScreen> {
                       Container(
                         key: _freeBtnKey, // 用容器包裹，确保有明确的可高亮区域
                         child: ElevatedButton(
-                          onPressed: _startFreeMode,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                            backgroundColor: Colors.blue,
-                            textStyle: const TextStyle(fontSize: 20),
-                          ),
-                          child: const Text('开始专注'),
+                        onPressed: _startFreeMode,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                          backgroundColor: Colors.blue,
+                          textStyle: const TextStyle(fontSize: 20),
+                        ),
+                        child: const Text('开始专注'),
                         ),
                       ),
                       const SizedBox(height: 15),
                       Container(
                         key: _presetBtnKey, // 同理包裹“预设时间”按钮
                         child: ElevatedButton(
-                          onPressed: () => _showPresetTimeDialog(),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                            backgroundColor: Colors.green,
-                            textStyle: const TextStyle(fontSize: 20),
-                          ),
-                          child: const Text('预设时间'),
+                        onPressed: () => _showPresetTimeDialog(),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                          backgroundColor: Colors.green,
+                          textStyle: const TextStyle(fontSize: 20),
+                        ),
+                        child: const Text('预设时间'),
                         ),
                       ),
                     ] else ...[
