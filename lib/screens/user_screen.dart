@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../services/data_repository.dart';
+import '../models/project.dart';
 
 class UserScreen extends StatefulWidget {
   final Color seedColor;
   final int currentPoints; // 以0.1为单位的运
+  final List<Project> projects; // 项目列表
+  final DateTime? lastCheckInDate; // 上次签到日期
+  final int? consecutiveCheckInDays; // 连续签到天数
   final void Function(Color newSeed) onApplyTheme;
   final void Function(int spendTenths) onSpendTenths;
 
@@ -15,6 +26,9 @@ class UserScreen extends StatefulWidget {
     super.key,
     required this.seedColor,
     required this.currentPoints,
+    required this.projects,
+    this.lastCheckInDate,
+    this.consecutiveCheckInDays,
     required this.onApplyTheme,
     required this.onSpendTenths,
   });
@@ -33,6 +47,12 @@ class _UserScreenState extends State<UserScreen> {
   int _shortSoundIndex = 1; // 1~5
   int _longSoundIndex = 2;  // 1~5
   final AudioPlayer _previewPlayer = AudioPlayer()..setReleaseMode(ReleaseMode.stop);
+  
+  // 云同步相关
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _keyController = TextEditingController();
+  bool _isUploading = false;
+  bool _isChecking = false;
 
   final List<Color> _palette = const [
     Colors.blue,
@@ -78,6 +98,86 @@ class _UserScreenState extends State<UserScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 大数据看板区域
+            Text('大数据看板', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade400, Colors.purple.shade400],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.analytics, color: Colors.white, size: 28),
+                      SizedBox(width: 8),
+                      Text(
+                        '数据看板',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    '将您的学习数据导出到看板，或跳转到数据看板查看详细统计',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  // 导出数据按钮
+                  ElevatedButton.icon(
+                    onPressed: _showExportDialog,
+                    icon: const Icon(Icons.file_download),
+                    label: const Text('导出数据'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.blue.shade700,
+                      minimumSize: const Size(double.infinity, 44),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // 预留远程推送按钮（暂不可用）
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('远程推送功能开发中，敬请期待'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.cloud_upload),
+                    label: const Text('远程推送（开发中）'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white54),
+                      minimumSize: const Size(double.infinity, 44),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Divider(color: Colors.grey[300]),
+            const SizedBox(height: 12),
             Text('主题颜色', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
             Wrap(
@@ -375,6 +475,119 @@ class _UserScreenState extends State<UserScreen> {
     widget.onSpendTenths(tenths);
     _showToast(context, '已花掉 ${value.toStringAsFixed(1)} 运');
     _spendController.clear();
+  }
+
+  // 显示导出选项对话框
+  void _showExportDialog() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '导出数据',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '选择导出方式',
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            // 仅导出按钮
+            ListTile(
+              leading: const Icon(Icons.file_download, color: Colors.blue),
+              title: const Text('仅导出'),
+              subtitle: const Text('将数据保存为 JSON 文件'),
+              onTap: () {
+                Navigator.pop(context);
+                _exportData(exportAndJump: false);
+              },
+            ),
+            const Divider(),
+            // 导出并跳转按钮
+            ListTile(
+              leading: const Icon(Icons.open_in_new, color: Colors.green),
+              title: const Text('导出并跳转'),
+              subtitle: const Text('导出数据后跳转到数据看板'),
+              onTap: () {
+                Navigator.pop(context);
+                _exportData(exportAndJump: true);
+              },
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 导出数据
+  Future<void> _exportData({required bool exportAndJump}) async {
+    try {
+      // 显示加载中
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // 构建导出数据
+      final exportData = {
+        'schemaVersion': 1,
+        'globalPointsTenths': widget.currentPoints,
+        'projects': widget.projects.map((p) => p.toMap()).toList(),
+        'lastCheckInDate': widget.lastCheckInDate?.toIso8601String(),
+        'consecutiveCheckInDays': widget.consecutiveCheckInDays,
+        'themeSeedColorValue': widget.seedColor.value,
+      };
+
+      final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
+
+      // 保存到临时文件
+      final directory = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final file = File('${directory.path}/focus_data_$timestamp.json');
+      await file.writeAsString(jsonString);
+
+      // 关闭加载对话框
+      if (mounted) Navigator.pop(context);
+
+      // 分享文件
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: '专注学习数据导出',
+      );
+
+      // 如果需要跳转
+      if (exportAndJump && mounted) {
+        // 延迟一下，让用户看到分享成功
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        final dashboardUrl = Uri.parse('https://6ye8xqwwpblq.space.minimaxi.com');
+        if (await canLaunchUrl(dashboardUrl)) {
+          await launchUrl(dashboardUrl, mode: LaunchMode.externalApplication);
+        } else {
+          _showToast(context, '无法打开数据看板网址');
+        }
+      } else if (mounted) {
+        _showToast(context, '数据导出成功');
+      }
+    } catch (e) {
+      // 关闭加载对话框
+      if (mounted) Navigator.pop(context);
+      
+      if (mounted) {
+        _showToast(context, '导出失败: $e');
+      }
+    }
   }
 
   void _showToast(BuildContext context, String msg) {
