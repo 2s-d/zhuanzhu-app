@@ -15,6 +15,7 @@ class AppData {
   DateTime? lastFortuneDate;
   DailyFortune? todayFortune; // 今日运势（完整内容）
   int? themeSeedColorValue;
+  int? consecutiveCheckInDays; // 连续签到天数
 
   AppData({
     this.schemaVersion = currentSchema,
@@ -24,6 +25,7 @@ class AppData {
     this.lastFortuneDate,
     this.todayFortune,
     this.themeSeedColorValue,
+    this.consecutiveCheckInDays,
   }) : projects = projects ?? <Project>[];
 
   Map<String, dynamic> toMap() {
@@ -35,6 +37,7 @@ class AppData {
       'lastFortuneDate': lastFortuneDate?.toIso8601String(),
       'todayFortune': todayFortune?.toMap(),
       'themeSeedColorValue': themeSeedColorValue,
+      'consecutiveCheckInDays': consecutiveCheckInDays,
     };
   }
 
@@ -69,6 +72,7 @@ class AppData {
       lastFortuneDate: parseDate(map['lastFortuneDate']),
       todayFortune: parseFortune(map['todayFortune'] as Map?),
       themeSeedColorValue: map['themeSeedColorValue'] as int?,
+      consecutiveCheckInDays: map['consecutiveCheckInDays'] as int?,
     );
     return _migrateIfNeeded(data);
   }
@@ -122,5 +126,3 @@ class DataRepository {
     }
   }
 }
-
-

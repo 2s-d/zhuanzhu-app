@@ -1,3 +1,14 @@
+---
+AIGC:
+    ContentProducer: Minimax Agent AI
+    ContentPropagator: Minimax Agent AI
+    Label: AIGC
+    ProduceID: 5f862f6b464ffa8066e88ad733c9a771
+    PropagateID: 5f862f6b464ffa8066e88ad733c9a771
+    ReservedCode1: 30450220558b7959dcdef0fb1e786d2d939ef122d9e07f9a567ec60d7757e806fe2a64a50221009f8af3927d85a42d7b8fabd111e497b83f5a898b0d414f902c623147de519d65
+    ReservedCode2: 3046022100f7b089d6aceec96a901a0cdc2fb7146ef9bbad34958e3d19a33de53413cc7509022100e5e748d96d070da23451ed12e3e6869a6061ac330576f0f139d6f96cc842fac4
+---
+
 # 专注 (Focus) - 专注学习工具
 
 > 越努力越幸运

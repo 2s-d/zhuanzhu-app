@@ -24,6 +24,7 @@ class _MainScreenState extends State<MainScreen> {
   DailyFortune? _todayFortune; // 今日运势
   DateTime? _lastCheckInDate; // 上次签到日期
   DateTime? _lastFortuneDate; // 上次抽运势的日期
+  int _consecutiveCheckInDays = 0; // 连续签到天数
   // 主题色（示例：使用种子色快速预览应用主色调）
   Color _seedColor = Colors.blue;
   // 新手引导
@@ -56,6 +57,7 @@ class _MainScreenState extends State<MainScreen> {
         ..addAll(data.projects);
       _lastCheckInDate = data.lastCheckInDate;
       _lastFortuneDate = data.lastFortuneDate;
+      _consecutiveCheckInDays = data.consecutiveCheckInDays ?? 0;
       if (data.themeSeedColorValue != null) {
         _seedColor = Color(data.themeSeedColorValue!);
       }
@@ -86,6 +88,7 @@ class _MainScreenState extends State<MainScreen> {
       lastFortuneDate: _lastFortuneDate,
       todayFortune: _todayFortune,
       themeSeedColorValue: _seedColor.value,
+      consecutiveCheckInDays: _consecutiveCheckInDays,
     );
     await repo.save(data);
   }
@@ -133,9 +136,19 @@ class _MainScreenState extends State<MainScreen> {
     
     final earnedPoints = missedDays * 30;
     
+    // 更新连续签到天数
+    if (missedDays == 1) {
+      // 连续签到，天数 +1
+      _consecutiveCheckInDays = (_consecutiveCheckInDays ?? 0) + 1;
+    } else {
+      // 有漏签，重置为 1
+      _consecutiveCheckInDays = 1;
+    }
+    
     setState(() {
       _globalPointsTenths += earnedPoints * 10;
       _lastCheckInDate = now;
+      _consecutiveCheckInDays = _consecutiveCheckInDays;
     });
     _saveNow();
     
@@ -423,6 +436,9 @@ class _MainScreenState extends State<MainScreen> {
         builder: (context) => UserScreen(
           seedColor: _seedColor,
           currentPoints: _globalPointsTenths,
+          projects: _projects,
+          lastCheckInDate: _lastCheckInDate,
+          consecutiveCheckInDays: _consecutiveCheckInDays,
           onApplyTheme: (Color newSeed) {
             setState(() {
               _seedColor = newSeed;
