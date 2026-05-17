@@ -1,0 +1,58 @@
+name: Deploy Focus Flutter Web to Server
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**'
+      - '.github/workflows/deploy-frontend.yml'
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Build Flutter Web
+        run: flutter build web --release
+      
+      - name: Pack frontend dist (flat for web root)
+        run: cd build/web && tar czf ../../zhuanzhu-frontend-dist.tar.gz .
+      
+      - name: Deploy frontend tarball to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_SSH_PORT }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "zhuanzhu-frontend-dist.tar.gz"
+          target: "/var/www/zhuanzhu/"
+          overwrite: true
+      
+      - name: Extract frontend on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_SSH_PORT }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 5m
+          script: |
+            set -e
+            cd /var/www/zhuanzhu
+            tar xzf zhuanzhu-frontend-dist.tar.gz
+            rm -f zhuanzhu-frontend-dist.tar.gz
+            echo "✅ 专注Flutter Web前端部署完成: $(date)"
