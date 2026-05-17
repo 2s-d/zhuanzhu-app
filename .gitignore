@@ -70,7 +70,6 @@ ios/
 macos/
 linux/
 windows/
-web/
 
 # Config files with sensitive info
 lib/config/app_config.dart
